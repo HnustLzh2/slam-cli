@@ -1,4 +1,4 @@
-package packagecmd
+package packageCmd
 
 import (
 	"context"
@@ -9,7 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"slam-cli/internal/pkg/caller"
-)
+	dto "slam-cli/internal/pkg/caller/DTO"
+)	
 
 const defaultPageSize int64 = 20
 
@@ -52,7 +53,7 @@ func runInfoCommand(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("args length must Greater than or equal to 1")
 	}
-	details := []caller.PackageDetail{}
+	details := []dto.PackageDetail{}
 	for _, name := range args {
 		resp, err := client.GetPackage(context.Background(), name)
 		if err != nil{
@@ -95,13 +96,13 @@ func runListCommand(cmd *cobra.Command, args []string, pageIndex, pageSize int64
 	return printJSON(cmd, resp)
 }
 
-func buildMGetPackageReq(args []string, pageIndex, pageSize int64) (caller.MGetPackageReq, error) {
+func buildMGetPackageReq(args []string, pageIndex, pageSize int64) (dto.MGetPackageReq, error) {
 	if len(args)%2 != 0 {
-		return caller.MGetPackageReq{}, fmt.Errorf("arguments must be provided as field/value pairs, for example: slam-cli package list name demo owner alice")
+		return dto.MGetPackageReq{}, fmt.Errorf("arguments must be provided as field/value pairs, for example: slam-cli package list name demo owner alice")
 	}
 
-	req := caller.MGetPackageReq{
-		PageReq: caller.PageReq{
+	req := dto.MGetPackageReq{
+		PageReq: dto.PageReq{
 			Page:     pageIndex,
 			PageSize: pageSize,
 		},
@@ -111,7 +112,7 @@ func buildMGetPackageReq(args []string, pageIndex, pageSize int64) (caller.MGetP
 		field := strings.ToLower(strings.TrimSpace(args[i]))
 		value := strings.TrimSpace(args[i+1])
 		if value == "" {
-			return caller.MGetPackageReq{}, fmt.Errorf("value for field %q cannot be empty", args[i])
+			return dto.MGetPackageReq{}, fmt.Errorf("value for field %q cannot be empty", args[i])
 		}
 
 		switch field {
@@ -122,23 +123,23 @@ func buildMGetPackageReq(args []string, pageIndex, pageSize int64) (caller.MGetP
 		case "dkms":
 			parsed, err := parseBoolArg(value)
 			if err != nil {
-				return caller.MGetPackageReq{}, fmt.Errorf("invalid dkms value %q: %w", value, err)
+				return dto.MGetPackageReq{}, fmt.Errorf("invalid dkms value %q: %w", value, err)
 			}
 			req.Dkms = &parsed
 		case "agent":
 			parsed, err := parseBoolArg(value)
 			if err != nil {
-				return caller.MGetPackageReq{}, fmt.Errorf("invalid agent value %q: %w", value, err)
+				return dto.MGetPackageReq{}, fmt.Errorf("invalid agent value %q: %w", value, err)
 			}
 			req.Agent = &parsed
 		case "type":
 			normalizedType := strings.ToLower(value)
 			if normalizedType != "src" && normalizedType != "bin" {
-				return caller.MGetPackageReq{}, fmt.Errorf("invalid type value %q: only src or bin are supported", value)
+				return dto.MGetPackageReq{}, fmt.Errorf("invalid type value %q: only src or bin are supported", value)
 			}
 			req.Type = normalizedType
 		default:
-			return caller.MGetPackageReq{}, fmt.Errorf("unsupported filter field %q", args[i])
+			return dto.MGetPackageReq{}, fmt.Errorf("unsupported filter field %q", args[i])
 		}
 	}
 

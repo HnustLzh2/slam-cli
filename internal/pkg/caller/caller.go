@@ -9,135 +9,12 @@ import (
 	"strings"
 	"time"
 
+	dto "slam-cli/internal/pkg/caller/DTO"
+
 	"github.com/go-resty/resty/v2"
 
 	configpkg "slam-cli/internal/pkg/config"
 )
-
-const (
-	defaultSLAMAPIBaseURL = "https://slam.byted.org/api/slam/v2"
-	headerXJWTToken       = "X-Jwt-Token"
-)
-
-type Client struct {
-	baseURL string
-	token   string
-	http    *resty.Client
-	auth    configpkg.AuthConfig
-}
-
-type tokenFile struct {
-	Region  string    `json:"region"`
-	Token   string    `json:"token"`
-	SavedAt time.Time `json:"saved_at"`
-}
-
-type PageReq struct {
-	Page     int64 `json:"page"`
-	PageSize int64 `json:"page_size"`
-}
-
-type apiResponse[T any] struct {
-	Code  int    `json:"code"`
-	Data  T      `json:"data"`
-	Error string `json:"error"`
-}
-
-type MGetPackageReq struct {
-	Keywords string `json:"keywords"`
-	Owner    string `json:"owner"`
-	PageReq
-	Dkms  *bool  `json:"dkms"`
-	Agent *bool  `json:"agent"`
-	Type  string `json:"type"`
-}
-
-type PageInfo struct {
-	Page      int64 `json:"page"`
-	PageSize  int64 `json:"pageSize"`
-	Total     int64 `json:"total"`
-	TotalPage int64 `json:"totalPage"`
-}
-
-type SimplePackage struct {
-	Name       string   `json:"name"`
-	Owner      []string `json:"owner"`
-	Type       string   `json:"type"`
-	Repo       string   `json:"repo"`
-	Branch     string   `json:"branch"`
-	GoVersion  string   `json:"goVersion"`
-	Region     []string `json:"region"`
-	Dist       []string `json:"dist"`
-	Dkms       bool     `json:"dkms"`
-	Agent      bool     `json:"agent"`
-	IsComplete bool     `json:"isComplete"`
-}
-
-type PackageVersion struct {
-	ID          int64    `json:"id"`
-	Version     string   `json:"version"`
-	Type        string   `json:"type"`
-	Repo        string   `json:"repo"`
-	Branch      string   `json:"branch"`
-	Commit      string   `json:"commit"`
-	GoVersion   string   `json:"goVersion"`
-	Region      []string `json:"region"`
-	Dist        []string `json:"dist"`
-	Applicant   string   `json:"applicant"`
-	VersionNote string   `json:"versionNote"`
-	Docs        []string `json:"docs"`
-	URL         []string `json:"url"`
-	PublishTime string   `json:"publishTime"`
-}
-
-type PackageDetail struct {
-	Name                string           `json:"name"`
-	Owner               []string         `json:"owner"`
-	Type                string           `json:"type"`
-	IsComplete          bool             `json:"isComplete"`
-	Repo                string           `json:"repo"`
-	Branch              string           `json:"branch"`
-	GoVersion           string           `json:"goVersion"`
-	Region              []string         `json:"region"`
-	Dist                []string         `json:"dist"`
-	Dkms                bool             `json:"dkms"`
-	Agent               bool             `json:"agent"`
-	PublishNotifyChatID string           `json:"publishNotifyChatID"`
-	Desc                string           `json:"desc"`
-	AgentType           string           `json:"agentType"`
-	ResourceLimit       string           `json:"resourceLimit"`
-	OpenSource          bool             `json:"openSource"`
-	CodeLanguage        []string         `json:"codeLanguage"`
-	InvolvedHardtype    string           `json:"involvedHardtype"`
-	HasNDA              bool             `json:"hasNDA"`
-	Versions            []PackageVersion `json:"versions"`
-	Raw                 map[string]any   `json:"-"`
-}
-
-type MGetPackageResp struct {
-	Packages []SimplePackage `json:"packages"`
-	PageInfo *PageInfo       `json:"pageInfo"`
-	Raw      map[string]any  `json:"-"`
-}
-
-type ThirdRepoPackage struct {
-	RepoName           string   `json:"repoName"`
-	Owner              []string `json:"owner"`
-	Level              int64    `json:"level"`
-	Type               string   `json:"type"`
-	OperatorWhitelists []string `json:"operatorWhitelists"`
-	URL                string   `json:"url"`
-	Distribution       []string `json:"distribution"`
-	Component          []string `json:"component"`
-	Architecture       []string `json:"architecture"`
-	XflowProcess       string   `json:"xflowProcess"`
-}
-
-type GetAllPackagesResp struct {
-	PrivatePackages   []SimplePackage    `json:"privatePackages"`
-	ThirdRepoPackages []ThirdRepoPackage `json:"thirdRepoPackages"`
-	Raw               map[string]any     `json:"-"`
-}
 
 func New() (*Client, error) {
 	authCfg, err := configpkg.RequireLogin()
@@ -172,7 +49,7 @@ func (c *Client) Auth() configpkg.AuthConfig {
 	return c.auth
 }
 
-func (c *Client) GetPackage(ctx context.Context, name string) (*PackageDetail, error) {
+func (c *Client) GetPackage(ctx context.Context, name string) (*dto.PackageDetail, error) {
 	if strings.TrimSpace(name) == "" {
 		return nil, fmt.Errorf("package name is required")
 	}
@@ -181,15 +58,14 @@ func (c *Client) GetPackage(ctx context.Context, name string) (*PackageDetail, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to call get package API: %w", err)
 	}
-	result, err := decodeAPIData[PackageDetail](resp)
+	result, err := decodeAPIData[dto.PackageDetail](resp)
 	if err != nil {
 		return nil, err
 	}
-	result.Raw = rawMap(result)
 	return result, nil
 }
 
-func (c *Client) MGetPackage(ctx context.Context, req MGetPackageReq) (*MGetPackageResp, error) {
+func (c *Client) MGetPackage(ctx context.Context, req dto.MGetPackageReq) (*dto.MGetPackageResp, error) {
 	r := c.http.R().SetContext(ctx)
 	if req.Keywords != "" {
 		setOptionalQuery(r, "keywords", req.Keywords)
@@ -215,24 +91,22 @@ func (c *Client) MGetPackage(ctx context.Context, req MGetPackageReq) (*MGetPack
 	if err != nil {
 		return nil, fmt.Errorf("failed to call mget package API: %w", err)
 	}
-	result, err := decodeAPIData[MGetPackageResp](resp)
+	result, err := decodeAPIData[dto.MGetPackageResp](resp)
 	if err != nil {
 		return nil, err
 	}
-	result.Raw = rawMap(result)
 	return result, nil
 }
 
-func (c *Client) GetAllPackages(ctx context.Context) (*GetAllPackagesResp, error) {
+func (c *Client) GetAllPackages(ctx context.Context) (*dto.GetAllPackagesResp, error) {
 	resp, err := c.http.R().SetContext(ctx).Get(c.urlFor("package", "all"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to call get all packages API: %w", err)
 	}
-	result, err := decodeAPIData[GetAllPackagesResp](resp)
+	result, err := decodeAPIData[dto.GetAllPackagesResp](resp)
 	if err != nil {
 		return nil, err
 	}
-	result.Raw = rawMap(result)
 	return result, nil
 }
 
@@ -292,7 +166,7 @@ func decodeAPIData[T any](resp *resty.Response) (*T, error) {
 		return nil, err
 	}
 
-	var envelope apiResponse[T]
+	var envelope dto.ApiResponse[T]
 	if err := json.Unmarshal(resp.Body(), &envelope); err != nil {
 		return nil, fmt.Errorf("failed to decode slam response: %w", err)
 	}

@@ -1,5 +1,6 @@
 .vscode
-skills
+.DS_Store
+skills/
 slam-cli
 *.exe
 *.dll
