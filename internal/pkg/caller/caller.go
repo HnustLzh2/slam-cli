@@ -110,6 +110,73 @@ func (c *Client) GetAllPackages(ctx context.Context) (*dto.GetAllPackagesResp, e
 	return result, nil
 }
 
+func (c *Client) SearchLivePatch(ctx context.Context, req dto.SearchLivePatchReq) (*dto.SearchLivePatchResp, error) {
+	r := c.http.R().SetContext(ctx)
+	setOptionalIntQuery(r, "page", req.Page)
+	setOptionalIntQuery(r, "pageSize", req.PageSize)
+	setOptionalIntQuery(r, "id", req.ID)
+	setOptionalQuery(r, "name", req.Name)
+	setOptionalQuery(r, "status", req.Status)
+	setOptionalQuery(r, "version", req.Version)
+	setOptionalQuery(r, "distribution", req.Distribution)
+	setOptionalQuery(r, "os_version", req.OsVersion)
+	setOptionalQuery(r, "kernel_version", req.KernelVersion)
+	setOptionalQuery(r, "arch", req.Arch)
+	setOptionalQuery(r, "creator", req.Creator)
+	setOptionalQuery(r, "startTime", req.StartTime)
+	setOptionalQuery(r, "endTime", req.EndTime)
+
+	resp, err := r.Get(c.urlFor("livepatch", "product"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to call search livepatch API: %w", err)
+	}
+	result, err := decodeAPIData[dto.SearchLivePatchResp](resp)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *Client) GetLivePatch(ctx context.Context, productID int64) (*dto.LivePatchProduct, error) {
+	if productID <= 0 {
+		return nil, fmt.Errorf("product id must be greater than 0")
+	}
+
+	resp, err := c.SearchLivePatch(ctx, dto.SearchLivePatchReq{
+		PageReq: dto.PageReq{
+			Page:     1,
+			PageSize: 1,
+		},
+		ID: productID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || len(resp.Data) == 0 {
+		return nil, nil
+	}
+	return &resp.Data[0], nil
+}
+
+func (c *Client) MGetThirdRepo(ctx context.Context, req dto.MGetThirdRepoReq) (*dto.MGetThirdRepoResp, error) {
+	r := c.http.R().SetContext(ctx)
+	setOptionalQuery(r, "name", req.Name)
+	setOptionalQuery(r, "type", req.Type)
+	setOptionalQuery(r, "owner", req.Owner)
+	setOptionalIntQuery(r, "page", req.Page)
+	setOptionalIntQuery(r, "pageSize", req.PageSize)
+
+	resp, err := r.Get(c.urlFor("third", "config"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to call mget third repo API: %w", err)
+	}
+	result, err := decodeAPIData[dto.MGetThirdRepoResp](resp)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (c *Client) urlFor(segments ...string) string {
 	parts := []string{strings.TrimRight(c.baseURL, "/")}
 	for _, segment := range segments {
