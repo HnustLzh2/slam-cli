@@ -10,7 +10,7 @@ import (
 
 	"slam-cli/internal/pkg/caller"
 	dto "slam-cli/internal/pkg/caller/DTO"
-)	
+)
 
 const defaultPageSize int64 = 20
 
@@ -22,16 +22,18 @@ func NewPackageCommand() *cobra.Command {
 
 	var pageIndex int64
 	var pageSize int64
+	var onlyMine bool
 
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "列出软件包",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runListCommand(cmd, args, pageIndex, pageSize)
+			return runListCommand(cmd, args, pageIndex, pageSize, onlyMine)
 		},
 	}
 	listCmd.Flags().Int64VarP(&pageIndex, "index", "i", 1, "页码")
 	listCmd.Flags().Int64VarP(&pageSize, "size", "s", defaultPageSize, "页面大小")
+	listCmd.Flags().BoolVarP(&onlyMine, "my", "m", false, "仅查看当前用户负责的记录")
 	cmd.AddCommand(listCmd)
 
 	cmd.AddCommand(&cobra.Command{
@@ -56,7 +58,7 @@ func runInfoCommand(cmd *cobra.Command, args []string) error {
 	details := []dto.PackageDetail{}
 	for _, name := range args {
 		resp, err := client.GetPackage(context.Background(), name)
-		if err != nil{
+		if err != nil {
 			return fmt.Errorf("failed to get package %q: %w", name, err)
 		}
 		if resp == nil {
@@ -70,7 +72,7 @@ func runInfoCommand(cmd *cobra.Command, args []string) error {
 	return printJSON(cmd, details)
 }
 
-func runListCommand(cmd *cobra.Command, args []string, pageIndex, pageSize int64) error {
+func runListCommand(cmd *cobra.Command, args []string, pageIndex, pageSize int64, onlyMine bool) error {
 	client, err := caller.New()
 	if err != nil {
 		return err
@@ -86,6 +88,9 @@ func runListCommand(cmd *cobra.Command, args []string, pageIndex, pageSize int64
 	req, err := buildMGetPackageReq(args, pageIndex, pageSize)
 	if err != nil {
 		return err
+	}
+	if onlyMine {
+		req.Owner = client.Auth().User.Username
 	}
 
 	resp, err := client.MGetPackage(context.Background(), req)

@@ -29,16 +29,59 @@ func NewLivePatchCommand() *cobra.Command {
 
 	var pageIndex int64
 	var pageSize int64
+	var onlyMine bool
+	var productID int64
+	var name string
+	var status string
+	var version string
+	var distribution string
+	var osVersion string
+	var kernelVersion string
+	var arch string
+	var creator string
+	var startTime string
+	var endTime string
 
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "列出 livepatch product",
+		Example: "  slam-cli livepatch list --status testing --creator alice\n" +
+			"  slam-cli livepatch list --distribution debian --os-version 12 --arch amd64\n" +
+			"  slam-cli livepatch list --id 1001 --my",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runListCommand(cmd, pageIndex, pageSize)
+			return runListCommand(cmd, dto.SearchLivePatchReq{
+				PageReq: dto.PageReq{
+					Page:     pageIndex,
+					PageSize: pageSize,
+				},
+				ID:            productID,
+				Name:          name,
+				Status:        status,
+				Version:       version,
+				Distribution:  distribution,
+				OsVersion:     osVersion,
+				KernelVersion: kernelVersion,
+				Arch:          arch,
+				Creator:       creator,
+				StartTime:     startTime,
+				EndTime:       endTime,
+			})
 		},
 	}
 	listCmd.Flags().Int64VarP(&pageIndex, "index", "i", 1, "页码")
 	listCmd.Flags().Int64VarP(&pageSize, "size", "s", defaultPageSize, "页面大小")
+	listCmd.Flags().Int64Var(&productID, "id", 0, "按 livepatch product ID 筛选")
+	listCmd.Flags().StringVar(&name, "name", "", "按产品名称筛选")
+	listCmd.Flags().StringVar(&status, "status", "", "按状态筛选")
+	listCmd.Flags().StringVar(&version, "version", "", "按版本筛选")
+	listCmd.Flags().StringVar(&distribution, "distribution", "", "按发行版筛选")
+	listCmd.Flags().StringVar(&osVersion, "os-version", "", "按 OS 版本筛选")
+	listCmd.Flags().StringVar(&kernelVersion, "kernel-version", "", "按内核版本筛选")
+	listCmd.Flags().StringVar(&arch, "arch", "", "按架构筛选")
+	listCmd.Flags().StringVar(&creator, "creator", "", "按创建人筛选")
+	listCmd.Flags().StringVar(&startTime, "start-time", "", "按开始时间筛选，对应原始 API startTime")
+	listCmd.Flags().StringVar(&endTime, "end-time", "", "按结束时间筛选，对应原始 API endTime")
+	listCmd.Flags().BoolVarP(&onlyMine, "my", "m", false, "仅查看当前用户负责的记录")
 	cmd.AddCommand(listCmd)
 
 	return cmd
@@ -66,25 +109,23 @@ func runInfoCommand(cmd *cobra.Command, productIDText string) error {
 	return printJSON(cmd, resp)
 }
 
-func runListCommand(cmd *cobra.Command, pageIndex, pageSize int64) error {
+func runListCommand(cmd *cobra.Command, req dto.SearchLivePatchReq) error {
 	client, err := caller.New()
 	if err != nil {
 		return err
 	}
 
-	if pageIndex <= 0 {
-		pageIndex = 1
+	if req.Page <= 0 {
+		req.Page = 1
 	}
-	if pageSize <= 0 {
-		pageSize = defaultPageSize
+	if req.PageSize <= 0 {
+		req.PageSize = defaultPageSize
+	}
+	if cmd.Flags().Changed("my") && cmd.Flag("my").Value.String() == "true" {
+		req.Creator = client.Auth().User.Username
 	}
 
-	resp, err := client.SearchLivePatch(context.Background(), dto.SearchLivePatchReq{
-		PageReq: dto.PageReq{
-			Page:     pageIndex,
-			PageSize: pageSize,
-		},
-	})
+	resp, err := client.SearchLivePatch(context.Background(), req)
 	if err != nil {
 		return err
 	}

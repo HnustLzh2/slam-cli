@@ -28,6 +28,16 @@ type MGetThirdRepoResp struct {
 	PageInfo   *PageInfo       `json:"pageInfo"`
 }
 
+type MGetTaskResp struct {
+	PageInfo *PageInfo  `json:"pageInfo"`
+	Tasks    []TaskInfo `json:"tasks"`
+}
+
+type MGetXflowResp struct {
+	XflowList []SimpleXflowInfo `json:"xflowList"`
+	PageInfo  *PageInfo         `json:"pageInfo"`
+}
+
 type GetAllPackagesResp struct {
 	PrivatePackages   []SimplePackage    `json:"privatePackages"`
 	ThirdRepoPackages []ThirdRepoPackage `json:"thirdRepoPackages"`
@@ -153,6 +163,51 @@ type LivePatchProduct struct {
 	Comment        string               `json:"comment"`
 	StatusTime     *LivePatchStatusTime `json:"status_time"`
 	UploadXflowID  int64                `json:"upload_xflow_id"`
+}
+
+type TaskInfo struct {
+	ID                   int64                 `json:"id"`
+	Package              string                `json:"package"`
+	Type                 string                `json:"type"`
+	State                string                `json:"state"`
+	Source               string                `json:"source"`
+	Creator              string                `json:"creator"`
+	URL                  []string              `json:"url"`
+	BuildTaskOpts        *BuildTaskOpts        `json:"buildTaskOpts,omitempty"`
+	SmokeTestTaskOpts    *SmokeTestTaskOpts    `json:"smokeTestTaskOpts,omitempty"`
+	PackageCheckTaskOpts *PackageCheckTaskOpts `json:"packageCheckTaskOpts,omitempty"`
+	CreatedAt            string                `json:"createdAt"`
+	UpdatedAt            string                `json:"updatedAt"`
+	Error                string                `json:"error"`
+	PackageInfo          *SimplePackage        `json:"packageInfo"`
+}
+
+type BuildTaskOpts struct {
+	Branch string   `json:"branch"`
+	Dist   []string `json:"dist"`
+}
+
+type SmokeTestTaskOpts struct {
+	LinuxKernel []string `json:"linuxKernel"`
+	Dist        []string `json:"dist"`
+	TosObjName  []string `json:"tosObjName,omitempty"`
+}
+
+type PackageCheckTaskOpts struct {
+	Dist        []string `json:"dist"`
+	Region      []string `json:"region"`
+	LinuxKernel []string `json:"linuxKernel"`
+}
+
+type SimpleXflowInfo struct {
+	XflowID   int64    `json:"xflowID"`
+	Type      string   `json:"type"`
+	Package   string   `json:"package"`
+	Applicant string   `json:"applicant"`
+	Reviewers []string `json:"reviewers"`
+	State     string   `json:"state"`
+	CreatedAt string   `json:"createdAt"`
+	UpdatedAt string   `json:"updatedAt"`
 }
 
 type SimplePackage struct {

@@ -11,7 +11,9 @@ import (
 	livepatchCmd "slam-cli/internal/command/livepatch"
 	packageCmd "slam-cli/internal/command/package"
 	shortcutCmd "slam-cli/internal/command/shortcut"
+	taskCmd "slam-cli/internal/command/task"
 	thirdRepoCmd "slam-cli/internal/command/thirdrepo"
+	xflowCmd "slam-cli/internal/command/xflow"
 )
 
 func NewRootCmd() *cobra.Command {
@@ -33,6 +35,8 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(packageCmd.NewPackageCommand())
 	cmd.AddCommand(livepatchCmd.NewLivePatchCommand())
 	cmd.AddCommand(thirdRepoCmd.NewThirdRepoCommand())
+	cmd.AddCommand(taskCmd.NewTaskCommand())
+	cmd.AddCommand(xflowCmd.NewXflowCommand())
 	cmd.AddCommand(NewCompletionCmd(cmd))
 
 	return cmd
@@ -42,14 +46,15 @@ func Execute() error {
 	return NewRootCmd().Execute()
 }
 
-var helpStr = fmt.Sprintf("1. %s\n2. %s\n3. %s\n4. %s\n5. %s\n6. %s\n7. %s\n8. %s\n9. %s\n10. %s\n",
+var helpStr = fmt.Sprintf("1. %s\n2. %s\n3. %s\n4. %s\n5. %s\n6. %s\n7. %s\n8. %s\n9. %s\n10. %s\n11. %s\n12. %s\n",
 	"slam-cli v0.1.0 用于获取软件包详细信息和全量获取软件包信息",
-	"slam-cli package list [-s -i] 用于获取软件包列表, -s 代表页面大小 -i代表页码",
+	"slam-cli package list [-s -i -m] 用于获取软件包列表,-m 代表当前用户负责的 -s 代表页面大小 -i代表页码",
 	"slam-cli package <package-name>... 用于获取某个软件包的详细信息",
-	"slam-cli livepatch list [-s -i] 用于获取 livepatch product列表, -s 代表页面大小 -i代表页码",
-	"slam-cli livepatch <product-id> 用于获取某个 livepatch product的详细信息",
-	"slam-cli third-repo list [-s -i] 用于获取 third repo package列表, -s 代表页面大小 -i代表页码",
-	// "slam-cli third-rep <package-name> [-d ] ... 用于获取某个 third repo package的详细信息",
+	"slam-cli livepatch list [--status --creator --distribution --os-version ...] 用于按多种条件获取热补丁产品列表",
+	"slam-cli livepatch <product-id> 用于获取某个热补丁产品的详细信息",
+	"slam-cli third-repo list [-s -i -m] 用于获取三方源列表, -m 代表当前用户负责的 -s 代表页面大小 -i 代表页码",
+	"slam-cli task list [--type --state --package --source --creator ...] 用于按多种条件获取任务列表",
+	"slam-cli xflow list [--type --state --package --creator ...] 用于按多种条件获取 xflow 工单列表",
 	"slam-cli help 用于显示帮助信息",
 	"slam-cli version 用于显示当前版本",
 	"slam-cli auth login 用于登录/ status 查看登录状态",

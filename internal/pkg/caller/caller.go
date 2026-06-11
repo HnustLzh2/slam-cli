@@ -177,6 +177,55 @@ func (c *Client) MGetThirdRepo(ctx context.Context, req dto.MGetThirdRepoReq) (*
 	return result, nil
 }
 
+func (c *Client) MGetTask(ctx context.Context, req dto.MGetTaskReq) (*dto.MGetTaskResp, error) {
+	r := c.http.R().SetContext(ctx)
+	setOptionalIntQuery(r, "page", req.Page)
+	setOptionalIntQuery(r, "pageSize", req.PageSize)
+	setOptionalIntQuery(r, "id", req.ID)
+	setOptionalQuery(r, "package", req.Package)
+	setOptionalQuery(r, "type", req.Type)
+	setOptionalQuery(r, "state", req.State)
+	setOptionalQuery(r, "source", req.Source)
+	setOptionalQuery(r, "creator", req.Creator)
+	if req.My {
+		r.SetQueryParam("my", "true")
+	}
+
+	resp, err := r.Get(c.urlFor("task"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to call mget task API: %w", err)
+	}
+	result, err := decodeAPIData[dto.MGetTaskResp](resp)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *Client) MGetXflow(ctx context.Context, req dto.MGetXflowReq) (*dto.MGetXflowResp, error) {
+	r := c.http.R().SetContext(ctx)
+	setOptionalIntQuery(r, "page", req.Page)
+	setOptionalIntQuery(r, "pageSize", req.PageSize)
+	setOptionalIntQuery(r, "xflowID", req.XflowID)
+	setOptionalQuery(r, "package", req.Package)
+	setOptionalQuery(r, "type", req.Type)
+	setOptionalQuery(r, "state", req.State)
+	setOptionalQuery(r, "creator", req.Creator)
+	if req.My {
+		r.SetQueryParam("my", "true")
+	}
+
+	resp, err := r.Get(c.urlFor("xflow"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to call mget xflow API: %w", err)
+	}
+	result, err := decodeAPIData[dto.MGetXflowResp](resp)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (c *Client) urlFor(segments ...string) string {
 	parts := []string{strings.TrimRight(c.baseURL, "/")}
 	for _, segment := range segments {

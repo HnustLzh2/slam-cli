@@ -34,3 +34,24 @@ type MGetThirdRepoReq struct {
 	Owner string `json:"owner"`
 	PageReq
 }
+
+type MGetTaskReq struct {
+	PageReq
+	ID      int64  `json:"id"`
+	Package string `json:"package"`
+	Type    string `json:"type"`
+	State   string `json:"state"`
+	Source  string `json:"source"`
+	Creator string `json:"creator"`
+	My      bool   `json:"my"`
+}
+
+type MGetXflowReq struct {
+	PageReq
+	XflowID int64  `json:"xflowID"`
+	Package string `json:"package"`
+	Type    string `json:"type"`
+	State   string `json:"state"`
+	Creator string `json:"creator"`
+	My      bool   `json:"my"`
+}

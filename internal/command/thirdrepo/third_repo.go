@@ -21,22 +21,24 @@ func NewThirdRepoCommand() *cobra.Command {
 
 	var pageIndex int64
 	var pageSize int64
+	var onlyMine bool
 
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "列出 third repo package",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runListCommand(cmd, pageIndex, pageSize)
+			return runListCommand(cmd, pageIndex, pageSize, onlyMine)
 		},
 	}
 	listCmd.Flags().Int64VarP(&pageIndex, "index", "i", 1, "页码")
 	listCmd.Flags().Int64VarP(&pageSize, "size", "s", defaultPageSize, "页面大小")
+	listCmd.Flags().BoolVarP(&onlyMine, "my", "m", false, "仅查看当前用户负责的记录")
 	cmd.AddCommand(listCmd)
 
 	return cmd
 }
 
-func runListCommand(cmd *cobra.Command, pageIndex, pageSize int64) error {
+func runListCommand(cmd *cobra.Command, pageIndex, pageSize int64, onlyMine bool) error {
 	client, err := caller.New()
 	if err != nil {
 		return err
@@ -49,12 +51,17 @@ func runListCommand(cmd *cobra.Command, pageIndex, pageSize int64) error {
 		pageSize = defaultPageSize
 	}
 
-	resp, err := client.MGetThirdRepo(context.Background(), dto.MGetThirdRepoReq{
+	req := dto.MGetThirdRepoReq{
 		PageReq: dto.PageReq{
 			Page:     pageIndex,
 			PageSize: pageSize,
 		},
-	})
+	}
+	if onlyMine {
+		req.Owner = client.Auth().User.Username
+	}
+
+	resp, err := client.MGetThirdRepo(context.Background(), req)
 	if err != nil {
 		return err
 	}
