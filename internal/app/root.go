@@ -1,6 +1,7 @@
 package app
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 
@@ -46,19 +47,8 @@ func Execute() error {
 	return NewRootCmd().Execute()
 }
 
-var helpStr = fmt.Sprintf("1. %s\n2. %s\n3. %s\n4. %s\n5. %s\n6. %s\n7. %s\n8. %s\n9. %s\n10. %s\n11. %s\n12. %s\n",
-	"slam-cli v0.1.0 用于获取软件包详细信息和全量获取软件包信息",
-	"slam-cli package list [-s -i -m] 用于获取软件包列表,-m 代表当前用户负责的 -s 代表页面大小 -i代表页码",
-	"slam-cli package <package-name>... 用于获取某个软件包的详细信息",
-	"slam-cli livepatch list [--status --creator --distribution --os-version ...] 用于按多种条件获取热补丁产品列表",
-	"slam-cli livepatch <product-id> 用于获取某个热补丁产品的详细信息",
-	"slam-cli third-repo list [-s -i -m] 用于获取三方源列表, -m 代表当前用户负责的 -s 代表页面大小 -i 代表页码",
-	"slam-cli task list [--type --state --package --source --creator ...] 用于按多种条件获取任务列表",
-	"slam-cli xflow list [--type --state --package --creator ...] 用于按多种条件获取 xflow 工单列表",
-	"slam-cli help 用于显示帮助信息",
-	"slam-cli version 用于显示当前版本",
-	"slam-cli auth login 用于登录/ status 查看登录状态",
-	"slam-cli config list 用于查看当前配置")
+//go:embed help.txt
+var helpStr string
 
 func NewHelpCmd() *cobra.Command {
 	return &cobra.Command{
@@ -66,7 +56,7 @@ func NewHelpCmd() *cobra.Command {
 		Short: "显示帮助信息",
 		Long:  "显示 slam-cli 的帮助信息，以及各子命令的使用方式。",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Fprintln(cmd.OutOrStdout(), helpStr)
+			fmt.Fprint(cmd.OutOrStdout(), helpStr)
 			return nil
 		},
 	}

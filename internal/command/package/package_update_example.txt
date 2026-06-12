@@ -1,0 +1,28 @@
+  slam-cli package update bdaa-sdk --file update-package.json
+
+update-package.json 示例：
+  {
+    "owner": ["alice"],
+    "type": "src",
+    "repo": "git@example.com/repo.git",
+    "branch": "main",
+    "goVersion": "1.22",
+    "region": ["cn"],
+    "dist": ["Debian 12"],
+    "dkms": false,
+    "agent": false,
+    "desc": "package description",
+    "publishNotifyChatID": "",
+    "agentType": "",
+    "resourceLimit": "",
+    "openSource": false,
+    "codeLanguage": ["golang"],
+    "listenPorts": [
+      {"protocol": "tcp", "port": 8080, "desc": "http service"}
+    ],
+    "involvedHardtype": "",
+    "hasNDA": false
+  }
+
+bin 类型 files 示例：
+  "files": [{"name": "demo.deb", "key": "tmp/uploaded-key"}]

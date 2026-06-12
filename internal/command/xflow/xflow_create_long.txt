@@ -1,0 +1,36 @@
+创建 xflow 工单，对应 SLAM API：POST /api/slam/v2/xflow。
+
+这是写接口，执行前必须确认已登录：slam-cli auth status。
+请求体通过 --file 传入，JSON 字段与 SLAM API CreateXflowReq 对齐。
+--action-user 会写入 X-Action-User header，主要用于服务账号代真实用户发起的场景。
+
+create-xflow.json 必须包含：
+  type     工单类型：publish、register、sync
+  package  软件包名
+
+不同 type 需要不同 opts：
+  publish   使用 publishOpts，发布已有 package 的新版本。
+  register  使用 registerOpts，注册新 package。
+  sync      使用 syncOpts，同步已有版本到指定 region。
+
+publishOpts 要点：
+  docsV2.reviewDoc/releaseNote/testDoc  评审、发布、测试文档链接
+  versionNote                           版本说明
+  changeOrder 或 reasonNoChange         至少提供一个
+  region/dist                           发布区域和发行版
+  smokeTestParams.linuxKernel           可选冒烟测试内核
+  files                                 bin 包文件列表
+  hwKeys                                相关硬件 key
+
+registerOpts 要点：
+  packageType                           src 或 bin
+  owner                                 负责人列表
+  repo/branch/goVersion/codeLanguage    src 类型字段
+  files                                 bin 类型必填文件列表
+  dist/region                           发行版和区域
+  dkms/agent/openSource/hasNDA           布尔字段
+  agentType/resourceLimit/listenPorts   agent 包相关字段
+
+syncOpts 要点：
+  versionID  要同步的软件包版本 ID
+  region     目标区域列表

@@ -1,0 +1,33 @@
+slam-cli v0.1.0
+
+用途：
+  面向 agent 使用的 SLAM 命令行工具。所有后端查询和写入命令都依赖本地登录态。
+  执行前建议先运行：slam-cli auth status
+
+认证与配置：
+  slam-cli auth login --region cn           登录，region 支持 cn/us/sg
+  slam-cli auth status                      查看登录状态
+  slam-cli config | config list | config get 查看本地配置
+
+常用查询：
+  slam-cli package list [field value ...] [-i page] [-s pageSize] [-m]
+  slam-cli package info <package-name> [package-name...]
+  slam-cli livepatch list [--status --creator --distribution --os-version ...]
+  slam-cli livepatch <product-id>
+  slam-cli third-repo list [-i page] [-s pageSize] [-m]
+  slam-cli task list [--id --type --state --package --source --creator ...]
+  slam-cli xflow list [--type --state --package --creator ...]
+
+写入命令：
+  slam-cli package update <name> --file update-package.json
+  slam-cli xflow create --file create-xflow.json [--action-user username]
+
+本地辅助：
+  slam-cli version
+  slam-cli +doctor
+  slam-cli completion bash|zsh|fish|powershell|ps
+  slam-cli +init  # 会修改 ~/.zshrc 和 ~/.bashrc，agent 执行前必须确认用户允许
+
+复杂命令可执行对应子命令 --help 查看 JSON 示例：
+  slam-cli package update --help
+  slam-cli xflow create --help

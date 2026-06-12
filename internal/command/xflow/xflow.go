@@ -2,8 +2,11 @@ package xflowCmd
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +15,12 @@ import (
 )
 
 const defaultPageSize int64 = 20
+
+//go:embed xflow_create_long.txt
+var xflowCreateLong string
+
+//go:embed xflow_create_example.txt
+var xflowCreateExample string
 
 func NewXflowCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -27,6 +36,8 @@ func NewXflowCommand() *cobra.Command {
 	var xflowType string
 	var state string
 	var creator string
+	var createFile string
+	var actionUser string
 
 	listCmd := &cobra.Command{
 		Use:   "list",
@@ -59,6 +70,19 @@ func NewXflowCommand() *cobra.Command {
 	listCmd.Flags().BoolVarP(&onlyMine, "my", "m", false, "仅查看当前用户负责的记录")
 	cmd.AddCommand(listCmd)
 
+	createCmd := &cobra.Command{
+		Use:     "create",
+		Short:   "创建 xflow 工单",
+		Long:    xflowCreateLong,
+		Example: xflowCreateExample,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCreateCommand(cmd, createFile, actionUser)
+		},
+	}
+	createCmd.Flags().StringVarP(&createFile, "file", "f", "", "请求 JSON 文件路径")
+	createCmd.Flags().StringVar(&actionUser, "action-user", "", "写入 X-Action-User header，用于服务账号代用户发起场景")
+	cmd.AddCommand(createCmd)
+
 	return cmd
 }
 
@@ -81,6 +105,42 @@ func runListCommand(cmd *cobra.Command, req dto.MGetXflowReq) error {
 	}
 
 	return printJSON(cmd, resp)
+}
+
+func runCreateCommand(cmd *cobra.Command, filePath, actionUser string) error {
+	client, err := caller.New()
+	if err != nil {
+		return err
+	}
+
+	var req dto.CreateXflowReq
+	if err := readJSONFile(filePath, &req); err != nil {
+		return err
+	}
+	if strings.TrimSpace(actionUser) != "" {
+		req.ActionUser = actionUser
+	}
+
+	resp, err := client.CreateXflow(context.Background(), req)
+	if err != nil {
+		return err
+	}
+	return printJSON(cmd, resp)
+}
+
+func readJSONFile(filePath string, dst any) error {
+	if strings.TrimSpace(filePath) == "" {
+		return fmt.Errorf("--file is required")
+	}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read JSON file %s: %w", filePath, err)
+	}
+	if err := json.Unmarshal(data, dst); err != nil {
+		return fmt.Errorf("failed to parse JSON file %s: %w", filePath, err)
+	}
+	return nil
 }
 
 func printJSON(cmd *cobra.Command, value any) error {

@@ -1,0 +1,61 @@
+  slam-cli xflow create --file create-xflow.json
+  slam-cli xflow create --file create-xflow.json --action-user alice
+
+publish 类型 create-xflow.json 示例：
+  {
+    "type": "publish",
+    "package": "bdaa-sdk",
+    "publishOpts": {
+      "docsV2": {
+        "reviewDoc": "https://example.com/review",
+        "releaseNote": "https://example.com/release",
+        "testDoc": "https://example.com/test"
+      },
+      "versionNote": "release note",
+      "smokeTestParams": {"linuxKernel": ["linux-5.15"]},
+      "changeOrder": {"id": "change-order-id"},
+      "reasonNoChange": "",
+      "branch": "main",
+      "region": ["cn"],
+      "dist": ["Debian 12"],
+      "files": [],
+      "hwKeys": []
+    }
+  }
+
+register 类型 create-xflow.json 示例：
+  {
+    "type": "register",
+    "package": "new-package",
+    "registerOpts": {
+      "packageType": "src",
+      "owner": ["alice"],
+      "repo": "git@example.com/repo.git",
+      "branch": "main",
+      "goVersion": "1.22",
+      "files": [],
+      "dist": ["Debian 12"],
+      "region": ["cn"],
+      "dkms": false,
+      "desc": "package description",
+      "agent": false,
+      "agentType": "",
+      "resourceLimit": "",
+      "publishNotifyChatID": "",
+      "openSource": false,
+      "codeLanguage": ["golang"],
+      "listenPorts": [],
+      "involvedHardtype": "",
+      "hasNDA": false
+    }
+  }
+
+sync 类型 create-xflow.json 示例：
+  {
+    "type": "sync",
+    "package": "bdaa-sdk",
+    "syncOpts": {
+      "versionID": 12345,
+      "region": ["cn", "sg"]
+    }
+  }

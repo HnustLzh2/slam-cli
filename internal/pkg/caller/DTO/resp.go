@@ -38,6 +38,10 @@ type MGetXflowResp struct {
 	PageInfo  *PageInfo         `json:"pageInfo"`
 }
 
+type CreateXflowResp struct {
+	XflowID int64 `json:"xflowID"`
+}
+
 type GetAllPackagesResp struct {
 	PrivatePackages   []SimplePackage    `json:"privatePackages"`
 	ThirdRepoPackages []ThirdRepoPackage `json:"thirdRepoPackages"`

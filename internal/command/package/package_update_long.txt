@@ -1,0 +1,19 @@
+更新软件包信息，对应 SLAM API：PUT /api/slam/v2/package/:name。
+
+这是写接口，执行前必须确认已登录：slam-cli auth status。
+<name> 是路径中的权威包名，CLI 会把它写入请求体 name 字段。
+请求体通过 --file 传入，JSON 字段与 SLAM API UpdatePackageReq 对齐。
+
+常用字段：
+  owner                负责人列表，必填
+  type                 src 或 bin，必填
+  repo/branch          src 类型代码仓库与分支
+  goVersion            src 类型 Go 版本
+  files                bin 类型文件列表，元素形如 {"name":"demo.deb","key":"tmp/uploaded-key"}
+  region/dist          发布区域和发行版
+  dkms/agent           布尔开关
+  desc                 描述
+  publishNotifyChatID  发布通知群 ID，可为空
+  agentType/resourceLimit/listenPorts  agent 包相关字段
+  openSource/codeLanguage              src 包相关字段
+  involvedHardtype/hasNDA              合规相关字段

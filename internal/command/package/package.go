@@ -2,8 +2,10 @@ package packageCmd
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,6 +15,12 @@ import (
 )
 
 const defaultPageSize int64 = 20
+
+//go:embed package_update_long.txt
+var packageUpdateLong string
+
+//go:embed package_update_example.txt
+var packageUpdateExample string
 
 func NewPackageCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -43,6 +51,20 @@ func NewPackageCommand() *cobra.Command {
 			return runInfoCommand(cmd, args)
 		},
 	})
+
+	var updateFile string
+	updateCmd := &cobra.Command{
+		Use:     "update <name>",
+		Short:   "更新软件包信息",
+		Long:    packageUpdateLong,
+		Args:    cobra.ExactArgs(1),
+		Example: packageUpdateExample,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runUpdateCommand(cmd, args[0], updateFile)
+		},
+	}
+	updateCmd.Flags().StringVarP(&updateFile, "file", "f", "", "请求 JSON 文件路径")
+	cmd.AddCommand(updateCmd)
 
 	return cmd
 }
@@ -99,6 +121,42 @@ func runListCommand(cmd *cobra.Command, args []string, pageIndex, pageSize int64
 	}
 
 	return printJSON(cmd, resp)
+}
+
+func runUpdateCommand(cmd *cobra.Command, name, filePath string) error {
+	client, err := caller.New()
+	if err != nil {
+		return err
+	}
+
+	var req dto.UpdatePackageReq
+	if err := readJSONFile(filePath, &req); err != nil {
+		return err
+	}
+
+	if err := client.UpdatePackage(context.Background(), name, req); err != nil {
+		return err
+	}
+
+	return printJSON(cmd, map[string]string{
+		"status":  "ok",
+		"package": name,
+	})
+}
+
+func readJSONFile(filePath string, dst any) error {
+	if strings.TrimSpace(filePath) == "" {
+		return fmt.Errorf("--file is required")
+	}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read JSON file %s: %w", filePath, err)
+	}
+	if err := json.Unmarshal(data, dst); err != nil {
+		return fmt.Errorf("failed to parse JSON file %s: %w", filePath, err)
+	}
+	return nil
 }
 
 func buildMGetPackageReq(args []string, pageIndex, pageSize int64) (dto.MGetPackageReq, error) {

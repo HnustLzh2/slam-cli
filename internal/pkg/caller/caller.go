@@ -65,6 +65,24 @@ func (c *Client) GetPackage(ctx context.Context, name string) (*dto.PackageDetai
 	return result, nil
 }
 
+func (c *Client) UpdatePackage(ctx context.Context, name string, req dto.UpdatePackageReq) error {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return fmt.Errorf("package name is required")
+	}
+	req.Name = name
+
+	resp, err := c.http.R().
+		SetContext(ctx).
+		SetBody(req).
+		Put(c.urlFor("package", url.PathEscape(name)))
+	if err != nil {
+		return fmt.Errorf("failed to call update package API: %w", err)
+	}
+	_, err = decodeAPIData[map[string]any](resp)
+	return err
+}
+
 func (c *Client) MGetPackage(ctx context.Context, req dto.MGetPackageReq) (*dto.MGetPackageResp, error) {
 	r := c.http.R().SetContext(ctx)
 	if req.Keywords != "" {
@@ -224,6 +242,24 @@ func (c *Client) MGetXflow(ctx context.Context, req dto.MGetXflowReq) (*dto.MGet
 		return nil, err
 	}
 	return result, nil
+}
+
+func (c *Client) CreateXflow(ctx context.Context, req dto.CreateXflowReq) (*dto.CreateXflowResp, error) {
+	r := c.http.R().SetContext(ctx)
+	if strings.TrimSpace(req.ActionUser) != "" {
+		r.SetHeader("X-Action-User", req.ActionUser)
+	}
+
+	resp, err := r.SetBody(req).Post(c.urlFor("xflow"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to call create xflow API: %w", err)
+	}
+
+	xflowID, err := decodeAPIData[int64](resp)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.CreateXflowResp{XflowID: *xflowID}, nil
 }
 
 func (c *Client) urlFor(segments ...string) string {
