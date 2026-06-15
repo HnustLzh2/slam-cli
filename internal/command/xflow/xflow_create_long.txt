@@ -13,24 +13,73 @@ create-xflow.json 必须包含：
   register  使用 registerOpts，注册新 package。
   sync      使用 syncOpts，同步已有版本到指定 region。
 
-publishOpts 要点：
-  docsV2.reviewDoc/releaseNote/testDoc  评审、发布、测试文档链接
-  versionNote                           版本说明
-  changeOrder 或 reasonNoChange         至少提供一个
-  region/dist                           发布区域和发行版
-  smokeTestParams.linuxKernel           可选冒烟测试内核
-  files                                 bin 包文件列表
-  hwKeys                                相关硬件 key
+RegisterOpt：注册软件包参数
+PackageType
+  软件包类型。可选值通常为 src / bin，分别表示源码包 / 二进制包。
+Owner
+  软件包负责人列表。
+Repo
+  源码仓库地址或仓库标识。源码包通常必填。
+Branch
+  源码分支。源码包注册或发布时使用。
+GoVersion
+  Go 版本。仅源码包使用，用于后续构建任务选择 Go 环境。
+Files
+  文件列表。二进制包注册时通常需要上传文件，元素为 rpc.File。
+Dist
+  目标发行版 / 架构 / 分发目标列表。
+Region
+  生效区域列表。
+Dkms
+  是否是 DKMS 包。DKMS 包发布时通常要求提供冒烟测试参数。
+Agent
+  是否是 Agent 类软件包。
+Desc
+  软件包描述信息。
+PublishNotifyChatID
+  发布通知群 ID。用于发布完成后的通知。
+AgentType
+  Agent 类型。Agent=true 时需要提供。
+ResourceLimit
+  资源限制信息。Agent 包或版本元数据中会使用。
+OpenSource
+  是否为开源软件。
+CodeLanguage
+  代码语言列表。源码包使用，例如 c、cpp、java、python、golang 等。
+ListenPorts
+  监听端口列表，用于描述服务暴露或监听的端口信息。
+InvolvedHardtype
+  涉及的硬件类型。
+HasNDA
+  是否涉及 NDA。
 
-registerOpts 要点：
-  packageType                           src 或 bin
-  owner                                 负责人列表
-  repo/branch/goVersion/codeLanguage    src 类型字段
-  files                                 bin 类型必填文件列表
-  dist/region                           发行版和区域
-  dkms/agent/openSource/hasNDA           布尔字段
-  agentType/resourceLimit/listenPorts   agent 包相关字段
+PublishOpt：发布版本参数
+Docs
+  旧版文档字段。当前主要使用 DocsV2。
+DocsV2
+  新版交付文档信息，类型为 rpc.PublishDocs，通常包含评审文档、发布说明、测试文档等。
+VersionNote
+  版本说明 / 发布说明。
+SmokeTestParams
+  冒烟测试参数。DKMS 包发布时通常必填。
+ChangeOrder
+  变更单数据。如果提供，会用于创建或关联变更单。
+ReasonNoChange
+  不走变更单或无变更单的原因。ChangeOrder 为空时需要提供。
+Dist
+  本次发布覆盖的发行版 / 目标列表。
+Region
+  本次发布覆盖的区域列表。
+Branch
+  本次发布使用的源码分支。源码包发布时通常必填。
+Files
+  本次发布上传的产物文件列表。二进制包发布时通常必填。
+HwKeys
+  硬件 key 列表，用于标识硬件相关适配或约束。
 
-syncOpts 要点：
-  versionID  要同步的软件包版本 ID
-  region     目标区域列表
+SyncOpt：同步版本参数
+VersionID
+  要同步的版本 ID。
+Region
+  要同步到的区域列表。
+```

@@ -1,135 +1,73 @@
 # slam-cli
 
-`slam-cli` 是一个面向 **SLAM 软件包查询与认证** 场景的命令行工具。
+`slam-cli` 是面向 agent 使用的 SLAM 命令行工具。当前能力覆盖本地认证与配置、软件包查询与更新、livepatch/third-repo/task/xflow 查询、xflow 创建，以及本地辅助命令。
 
-当前项目已经具备以下可用能力：
+当前版本：`0.1.0`，定义见 `internal/app/version.go`。
 
-- 飞书扫码登录并保存本地认证信息
-- 查看当前登录状态
-- 查看本地配置
-- 按条件分页查询软件包列表
-- 查询一个或多个软件包详情
-- 提供基础快捷命令 `+doctor` 与 `+init`
+## 当前能力
 
-当前版本：`0.1.0`，定义见 `internal/app/version.go:3`。
+根命令注册在 `internal/app/root.go`，当前工作区入口为 `cmd/slam-cli/main.go`。核心命令包括：
 
----
+```text
+slam-cli help
+slam-cli version
+slam-cli auth login
+slam-cli auth status
+slam-cli config
+slam-cli config list
+slam-cli config get
+slam-cli package list
+slam-cli package info
+slam-cli package update
+slam-cli livepatch list
+slam-cli livepatch <product-id>
+slam-cli third-repo list
+slam-cli task list
+slam-cli xflow list
+slam-cli xflow create
+slam-cli completion bash|zsh|fish|powershell|ps
+slam-cli +doctor
+slam-cli +init
+```
 
-## 功能概览
-
-根命令注册在 `internal/app/root.go:14`，当前 CLI 暴露的命令包括：
-
-- `slam-cli help`
-- `slam-cli version`
-- `slam-cli auth login`
-- `slam-cli auth status`
-- `slam-cli config`
-- `slam-cli config list`
-- `slam-cli config get`
-- `slam-cli package list`
-- `slam-cli package info`
-- `slam-cli +doctor`
-- `slam-cli +init`
-
-对应实现位置：
-
-- 根命令装配：`internal/app/root.go:14`
-- 认证命令：`internal/command/auth/auth.go:14`
-- 配置命令：`internal/command/config/config.go:12`
-- 软件包命令：`internal/command/package/package.go:17`
-- 快捷命令：`internal/command/shortcut/shortcut.go:9`
-
-> 说明：`internal/pkg/caller/caller.go:101` 中已经实现了 `GetAllPackages` 底层调用，但当前版本还没有对应的 CLI 子命令对外暴露。
-
----
+后端查询和写入命令都会通过 `internal/pkg/caller.New()` 读取本地登录态；未登录时会要求先执行 `slam-cli auth login`。
 
 ## 项目结构
 
-当前仓库核心结构如下：
-
 ```text
 slam-cli/
-├── cmd/
-│   └── slam/
-│       └── main.go
-├── internal/
-│   ├── app/
-│   │   ├── root.go
-│   │   └── version.go
-│   ├── command/
-│   │   ├── auth/
-│   │   │   └── auth.go
-│   │   ├── config/
-│   │   │   └── config.go
-│   │   ├── package/
-│   │   │   └── package.go
-│   │   └── shortcut/
-│   │       └── shortcut.go
-│   └── pkg/
-│       ├── authflow/
-│       │   ├── manager.go
-│       │   └── qr.go
-│       ├── caller/
-│       │   ├── DTO/
-│       │   │   ├── req.go
-│       │   │   └── resp.go
-│       │   ├── caller.go
-│       │   └── common.go
-│       ├── config/
-│       │   └── config.go
-│       └── output/
-│           └── output.go
-├── go.mod
-├── go.sum
-└── README.md
+├── cmd/slam-cli/main.go
+├── internal/app/                 # 根命令、help、version、completion
+├── internal/command/auth/         # 登录与状态
+├── internal/command/config/       # 配置展示
+├── internal/command/package/      # package list/info/update
+├── internal/command/livepatch/    # livepatch list/detail
+├── internal/command/thirdrepo/    # third-repo list
+├── internal/command/task/         # task list
+├── internal/command/xflow/        # xflow list/create
+├── internal/command/shortcut/     # +doctor、+init
+├── internal/pkg/authflow/         # 飞书扫码登录、JWT、用户信息
+├── internal/pkg/caller/           # SLAM API client
+├── internal/pkg/caller/DTO/       # 请求与响应结构
+├── internal/pkg/config/           # 本地配置与登录态
+└── skills/slam-cli/               # slam-cli agent skills
 ```
-
-职责划分：
-
-- `cmd/slam/main.go:9`：程序入口
-- `internal/app`：根命令装配、帮助与版本信息
-- `internal/command/*`：CLI 命令层
-- `internal/pkg/authflow`：飞书扫码登录、JWT 获取与用户信息拉取
-- `internal/pkg/caller`：SLAM 后端 API 调用与响应解析
-- `internal/pkg/config`：本地配置与登录态管理
-- `internal/pkg/output/output.go:8`：基础输出封装
-
----
 
 ## 快速开始
 
-### 本地运行
+项目要求 Go `1.26.1`，定义见 `go.mod`。
 
 ```bash
-go run ./cmd/slam help
-go run ./cmd/slam version
+go run ./cmd/slam-cli help
+go run ./cmd/slam-cli version
+go build -o slam-cli ./cmd/slam-cli
 ```
 
-### 构建二进制
+主要依赖包括 `cobra`、`resty`、`persistent-cookiejar` 和 `qrterminal`。
 
-```bash
-go build -o slam-cli ./cmd/slam
-./slam-cli help
-```
+## 认证与配置
 
-### 运行环境
-
-- Go 版本：`1.26.1`，定义见 `go.mod:3`
-- 主要依赖：`cobra`、`resty`、`persistent-cookiejar`、`qrterminal`，见 `go.mod:5`
-
----
-
-## 认证与本地配置
-
-### 登录
-
-登录命令定义在 `internal/command/auth/auth.go:23`。
-
-```bash
-slam-cli auth login
-```
-
-支持区域参数：
+登录：
 
 ```bash
 slam-cli auth login --region cn
@@ -137,44 +75,15 @@ slam-cli auth login --region us
 slam-cli auth login --region sg
 ```
 
-区域 flag 定义见 `internal/command/auth/auth.go:21`。
+`--region` 支持短参数 `-r`，默认是 `cn`。登录会执行飞书扫码 SSO，获取 JWT token 和用户信息，并写入本地配置。
 
-登录流程说明：
-
-1. 创建认证管理器，见 `internal/pkg/authflow/manager.go:75`
-2. 拉起飞书扫码登录流程，见 `internal/pkg/authflow/manager.go:191`
-3. 获取 JWT token，见 `internal/pkg/authflow/manager.go:312`
-4. 获取用户信息，见 `internal/pkg/authflow/manager.go:161`
-5. 保存本地认证信息，见 `internal/command/auth/auth.go:44`
-
-登录成功后会在本地写入：
-
-- 配置目录：`~/.slam-cli`，见 `internal/pkg/config/config.go:65`
-- 配置文件：`~/.slam-cli/config.json`，见 `internal/pkg/config/config.go:79`
-- token 文件目录：`~/.slam-cli/auth/`，见 `internal/pkg/authflow/manager.go:86`
-- cookie jar 文件：`~/.slam-cli/cookies`，见 `internal/pkg/authflow/manager.go:91`
-
-### 查看登录状态
+查看登录状态：
 
 ```bash
 slam-cli auth status
 ```
 
-状态命令定义在 `internal/command/auth/auth.go:80`，会输出：
-
-- region
-- 是否已登录
-- 更新时间
-- token 文件路径
-- token 摘要
-- 用户名
-- 邮箱
-
-登录状态判断逻辑见 `internal/pkg/config/config.go:38`。
-
-### 查看配置
-
-以下三个命令当前行为一致，都会输出配置文件路径和完整配置 JSON：
+查看配置：
 
 ```bash
 slam-cli config
@@ -182,240 +91,205 @@ slam-cli config list
 slam-cli config get
 ```
 
-实现位置：`internal/command/config/config.go:12`。
+本地文件：
 
-默认配置定义在 `internal/pkg/config/config.go:54`，默认值包括：
+- 配置目录：`~/.slam-cli`
+- 配置文件：`~/.slam-cli/config.json`
+- token 文件：`~/.slam-cli/auth/<region>.token`
+- cookie jar：`~/.slam-cli/cookies`
 
-- `profile: default`
-- `output: plain`
-- `auth.logged_in: false`
-- `auth.region: cn`
+## 软件包
 
----
-
-## 软件包查询
-
-软件包命令定义在 `internal/command/package/package.go:17`。
-
-软件包查询依赖已登录状态：`caller.New()` 会先调用 `configpkg.RequireLogin()`，见 `internal/pkg/caller/caller.go:19` 与 `internal/pkg/config/config.go:158`。
-
-### 查询软件包列表
-
-默认查询第一页：
+列表查询：
 
 ```bash
 slam-cli package list
-```
-
-指定页码与页面大小：
-
-```bash
 slam-cli package list --index 1 --size 20
 slam-cli package list -i 2 -s 50
+slam-cli package list --my
 ```
 
-分页 flag 定义见：
-
-- `internal/command/package/package.go:33`
-- `internal/command/package/package.go:34`
-
-按条件过滤时，参数必须以 **字段 / 值** 成对传入，校验逻辑见 `internal/command/package/package.go:99`。
-
-示例：
+过滤参数必须按 `字段 值` 成对传入：
 
 ```bash
 slam-cli package list name bdaa
-slam-cli package list owner liubing.065
+slam-cli package list owner alice
 slam-cli package list type src
 slam-cli package list dkms true
 slam-cli package list agent false
-slam-cli package list name bdaa owner liubing.065 type src
+slam-cli package list name bdaa owner alice type src
 ```
 
-当前支持的过滤字段：
+支持字段：
 
-- `name`
-- `keyword`
-- `keywords`
+- `name` / `keyword` / `keywords`
 - `owner`
 - `dkms`
 - `agent`
 - `type`
 
-参数规则：
+规则：
 
-- `type` 仅支持 `src` 或 `bin`，见 `internal/command/package/package.go:135`
-- `dkms` / `agent` 支持 `true/false/yes/no/1/0`，见 `internal/command/package/package.go:149`
+- `type` 仅支持 `src` 或 `bin`
+- `dkms` / `agent` 支持 `true/false/yes/no/1/0`，代码也接受 `t/f/y/n`
+- `--my` / `-m` 会使用当前登录用户作为 owner
 
-列表查询最终调用 `/package` 接口，见 `internal/pkg/caller/caller.go:68`。
-
-### 查询软件包详情
-
-查询单个软件包：
+详情查询：
 
 ```bash
 slam-cli package info bdaa-sdk
-```
-
-查询多个软件包：
-
-```bash
 slam-cli package info bdaa-sdk bdaa-drivers
 ```
 
-实现位置：`internal/command/package/package.go:48`。
+输出始终是 JSON 数组，即使只查一个包。
 
-注意事项：
-
-- 至少需要一个包名参数，见 `internal/command/package/package.go:53`
-- 当前输出始终为 JSON 数组，即使只查一个包也会返回数组结构，见 `internal/command/package/package.go:56`
-
-详情查询最终调用 `/package/{name}` 接口，见 `internal/pkg/caller/caller.go:52`。
-
-### 返回数据结构
-
-请求与响应 DTO 定义在：
-
-- 请求结构：`internal/pkg/caller/DTO/req.go:3`
-- 列表响应：`internal/pkg/caller/DTO/resp.go:16`
-- 全量响应：`internal/pkg/caller/DTO/resp.go:21`
-- 详情响应：`internal/pkg/caller/DTO/resp.go:43`
-- 版本信息：`internal/pkg/caller/DTO/resp.go:26`
-- 简版软件包：`internal/pkg/caller/DTO/resp.go:79`
-
-统一响应解码逻辑见 `internal/pkg/caller/caller.go:164`，格式为：
-
-```json
-{
-  "code": 0,
-  "data": {},
-  "error": ""
-}
-```
-
----
-
-## 快捷命令
-
-快捷命令定义在 `internal/command/shortcut/shortcut.go:9`。
-
-### `+doctor`
+更新软件包：
 
 ```bash
-slam-cli +doctor
+slam-cli package update bdaa-sdk --file update-package.json
 ```
 
-当前输出：
+这是写接口，对应 `PUT /api/slam/v2/package/:name`。`<name>` 是路径里的权威包名，CLI 会写入请求体 `name` 字段。请求 JSON 字段与 `internal/pkg/caller/DTO/req.go` 的 `UpdatePackageReq` 对齐。详细字段说明可查看：
+
+```bash
+slam-cli package update --help
+```
+
+## Work 查询
+
+### Livepatch
+
+```bash
+slam-cli livepatch 1001
+slam-cli livepatch list
+slam-cli livepatch list --index 1 --size 20
+slam-cli livepatch list --id 1001 --my
+slam-cli livepatch list --status testing --creator alice
+slam-cli livepatch list --distribution debian --os-version 12 --arch amd64
+```
+
+`livepatch list` 支持 `--id`、`--name`、`--status`、`--version`、`--distribution`、`--os-version`、`--kernel-version`、`--arch`、`--creator`、`--start-time`、`--end-time`、`--my`。
+
+### Third Repo
+
+```bash
+slam-cli third-repo list
+slam-cli third-repo list --index 1 --size 20
+slam-cli third-repo list --my
+```
+
+当前 CLI 只暴露分页和 `--my`，没有暴露 name/type/owner flags。
+
+### Task
+
+```bash
+slam-cli task list
+slam-cli task list --index 1 --size 20
+slam-cli task list --id 123
+slam-cli task list --package kernel-agent
+slam-cli task list --type build --state running
+slam-cli task list --source xflow --creator alice
+slam-cli task list --my
+```
+
+支持 `--id`、`--package`、`--type`、`--state`、`--source`、`--creator`、`--my`。
+
+### Xflow
+
+查询：
+
+```bash
+slam-cli xflow list
+slam-cli xflow list --index 1 --size 20
+slam-cli xflow list --id 123456
+slam-cli xflow list --package kernel-agent
+slam-cli xflow list --type publish --state running
+slam-cli xflow list --creator alice
+slam-cli xflow list --my
+```
+
+支持 `--id`、`--package`、`--type`、`--state`、`--creator`、`--my`。
+
+创建：
+
+```bash
+slam-cli xflow create --file create-xflow.json
+slam-cli xflow create --file create-xflow.json --action-user alice
+```
+
+这是写接口，对应 `POST /api/slam/v2/xflow`。请求 JSON 字段与 `CreateXflowReq` 对齐，`type` 支持 `publish`、`register`、`sync`，分别使用 `publishOpts`、`registerOpts`、`syncOpts`。详细 JSON 说明可查看：
+
+```bash
+slam-cli xflow create --help
+```
+
+## 本地辅助命令
+
+```bash
+slam-cli help
+slam-cli version
+slam-cli +doctor
+slam-cli completion bash
+slam-cli completion zsh
+slam-cli completion fish
+slam-cli completion powershell
+slam-cli completion ps
+```
+
+`+doctor` 当前输出：
 
 ```text
 slam-cli doctor: ok (skeleton mode)
 ```
 
-实现位置：`internal/command/shortcut/shortcut.go:12`。
-
-### `+init`
+`+init` 会修改用户 shell 配置：
 
 ```bash
 slam-cli +init
 ```
 
-当前输出：
-
-```text
-slam-cli init: not implemented yet
-```
-
-实现位置：`internal/command/shortcut/shortcut.go:18`。
-
----
+它会向 `~/.zshrc` 追加 `source <(slam-cli completion zsh)` 配置块，向 `~/.bashrc` 追加 `source <(slam-cli completion bash)` 配置块，并执行 `source ~/.zshrc` 与 `source ~/.bashrc`。agent 执行前必须确认用户允许。
 
 ## 环境变量
 
-SLAM 后端地址支持通过环境变量覆盖，逻辑见 `internal/pkg/caller/caller.go:124`。
-
-### 直接指定完整 Base URL
-
-```bash
-export SLAM_API_BASE_URL="https://slam.byted.org/api/slam/v2"
-```
-
-### 只指定 Host
-
-```bash
-export SLAM_API_HOST="https://slam.byted.org"
-```
-
-程序会自动拼接为：
+默认后端地址定义在 `internal/pkg/caller/common.go`：
 
 ```text
 https://slam.byted.org/api/slam/v2
 ```
 
-默认地址常量定义在 `internal/pkg/caller/common.go:10`。
+可用环境变量：
 
----
+```bash
+export SLAM_API_BASE_URL="https://slam.byted.org/api/slam/v2"
+export SLAM_API_HOST="https://slam.byted.org"
+```
+
+`SLAM_API_BASE_URL` 会完整覆盖 base URL；`SLAM_API_HOST` 会拼接为 `<host>/api/slam/v2`。
 
 ## 开发与校验
 
-### 运行测试
+执行测试时必须使用项目要求的 Go 版本，并从 `/Users/bytedance/sdk/` 下查找对应 Go：
 
 ```bash
-go test ./...
+find /Users/bytedance/sdk -maxdepth 4 -type f -name go
+/Users/bytedance/sdk/<go1.26.1>/bin/go test ./...
 ```
 
-### 常用本地调试命令
+如果 `/Users/bytedance/sdk/` 下没有 Go `1.26.1`，跳过测试并说明原因。
+
+常用本地调试命令：
 
 ```bash
-go run ./cmd/slam help
-go run ./cmd/slam version
-go run ./cmd/slam auth --help
-go run ./cmd/slam config --help
-go run ./cmd/slam package list --help
+go run ./cmd/slam-cli help
+go run ./cmd/slam-cli package list --help
+go run ./cmd/slam-cli package update --help
+go run ./cmd/slam-cli xflow create --help
 ```
 
----
+## 当前边界
 
-## 当前限制
-
-截至当前版本，需要注意以下几点：
-
-1. **软件包查询依赖本地登录态**
-   - 未登录时会直接报错，见 `internal/pkg/config/config.go:164`。
-
-2. **`package list` 过滤参数必须成对传入**
-   - 否则会报错，见 `internal/command/package/package.go:100`。
-
-3. **`package info` 至少需要一个包名**
-   - 参数校验见 `internal/command/package/package.go:53`。
-
-4. **`GetAllPackages` 仅在调用层实现，CLI 尚未暴露对应命令**
-   - 见 `internal/pkg/caller/caller.go:101`。
-
-5. **`+doctor` 与 `+init` 仍是占位实现**
-   - 当前主要用于预留命令入口，见 `internal/command/shortcut/shortcut.go:9`。
-
----
-
-## 总结
-
-当前 `slam-cli` 已经具备基础可用性：
-
-- 能登录并保存认证信息
-- 能查看当前登录状态
-- 能查看本地配置
-- 能分页查询软件包列表
-- 能查询一个或多个软件包详情
-
-整体结构也已经比较清晰：
-
-- CLI 装配集中在 `internal/app/root.go:14`
-- 命令按领域放在 `internal/command/*`
-- 基础设施能力沉淀在 `internal/pkg/*`
-
-后续如果继续扩展，比较自然的方向包括：
-
-- 增加 `auth logout`
-- 增加 `config set`
-- 暴露 `package all` 或类似全量查询命令
-- 补充更完善的 `doctor` 检查项
-- 增加更友好的输出格式与错误提示
+- `GetAllPackages` 在 `internal/pkg/caller` 中已有底层方法，但当前没有 CLI 子命令。
+- `third-repo list` 底层 DTO 有 `name`、`type`、`owner` 字段，但当前 CLI 没有注册对应 flags。
+- 当前支持的写接口只有 `package update` 和 `xflow create`；没有删除、审批、发布执行、任意 API 调用等命令。
+- `config`、`config list`、`config get` 当前行为一致，都会打印配置文件路径和完整配置 JSON。
