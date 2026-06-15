@@ -1,7 +1,7 @@
   slam-cli xflow create --file create-xflow.json
   slam-cli xflow create --file create-xflow.json --action-user alice
 
-publish 类型 create-xflow.json 示例：
+publish 类型 create-xflow.json 示例（场景一：仅上源，不发起变更；常见于源码包，仅填写 reasonNoChange，不传 changeOrder）：
   {
     "type": "publish",
     "package": "bdaa-sdk",
@@ -11,14 +11,42 @@ publish 类型 create-xflow.json 示例：
         "releaseNote": "https://example.com/release",
         "testDoc": "https://example.com/test"
       },
-      "versionNote": "release note",
-      "smokeTestParams": {"linuxKernel": ["linux-5.15"]},
-      "changeOrder": {"id": "change-order-id"},
-      "reasonNoChange": "",
+      "versionNote": "填写版本信息",
+      "reasonNoChange": "仅上源，不涉及线上机器变更",
       "branch": "main",
       "region": ["cn"],
-      "dist": ["Debian 12"],
+      "dist": ["Debian13:riscv64"],
       "files": [],
+      "hwKeys": []
+    }
+  }
+
+publish 类型 create-xflow.json 示例（场景二：上源并发起变更；常见于二进制包，传 changeOrder，bin 包必须提供 files）：
+  {
+    "type": "publish",
+    "package": "ip-address-env",
+    "publishOpts": {
+      "docsV2": {
+        "reviewDoc": "https://example.com/review",
+        "releaseNote": "https://example.com/release",
+        "testDoc": "https://example.com/test"
+      },
+      "versionNote": "Debian13 riscv64 上源，同时发起变更",
+      "smokeTestParams": {
+        "linuxKernel": ["linux-6.6"]
+      },
+      "changeOrder": {
+        "id": "change-order-id"
+      },
+      "reasonNoChange": "",
+      "region": ["cn"],
+      "dist": ["Debian13:riscv64"],
+      "files": [
+        {
+          "name": "ip-address-env_3.9.1+byted_all.deb",
+          "key": "packages/ip-address-env/ip-address-env_3.9.1+byted_all.deb"
+        }
+      ],
       "hwKeys": []
     }
   }
@@ -34,7 +62,7 @@ register 类型 create-xflow.json 示例：
       "branch": "main",
       "goVersion": "1.22",
       "files": [],
-      "dist": ["Debian 12"],
+      "dist": ["Debian13:riscv64"],
       "region": ["cn"],
       "dkms": false,
       "desc": "package description",

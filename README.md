@@ -223,6 +223,18 @@ slam-cli xflow create --file create-xflow.json --action-user alice
 slam-cli xflow create --help
 ```
 
+其中 `publish` 要区分两种场景：
+
+- 仅上源不变更：不传 `changeOrder`，填写 `reasonNoChange`
+- 上源加变更：传 `changeOrder`，`reasonNoChange` 置空
+
+并且要注意：
+
+- src 包发布通常需要 `branch`
+- bin 包发布通常需要 `files`
+- dkms 包发布通常需要 `smokeTestParams`
+- `dist` 建议使用后端认可的完整字符串，例如 `Debian13:riscv64`
+
 ## 本地辅助命令
 
 ```bash
@@ -249,6 +261,27 @@ slam-cli +init
 ```
 
 它会向 `~/.zshrc` 追加 `source <(slam-cli completion zsh)` 配置块，向 `~/.bashrc` 追加 `source <(slam-cli completion bash)` 配置块，并执行 `source ~/.zshrc` 与 `source ~/.bashrc`。agent 执行前必须确认用户允许。
+
+## Skills 使用方法
+
+仓库里的 skills 目录是：`skills/slam-cli/`。
+
+- 路由入口：`skills/slam-cli/SKILL.md`
+- 项目开发：`skills/slam-cli/slam-cli-project/SKILL.md`
+- 认证配置：`skills/slam-cli/slam-cli-auth-config/SKILL.md`
+- 包查询更新：`skills/slam-cli/slam-cli-package-query/SKILL.md`
+- work 查询与 xflow：`skills/slam-cli/slam-cli-work-query/SKILL.md`
+- 本地辅助工具：`skills/slam-cli/slam-cli-local-tools/SKILL.md`
+
+使用原则：
+
+1. 优先选最小子 skill，不要一次加载所有 skill。
+2. 涉及后端查询或写接口前，先确认登录态：`slam-cli auth status`。
+3. `xflow create` 统一通过 JSON 文件驱动，先看：`slam-cli xflow create --help`。
+4. `publish` 有两种场景：
+   - 仅上源不变更：不传 `changeOrder`，填写 `reasonNoChange`
+   - 上源加变更：传 `changeOrder`，`reasonNoChange` 置空
+5. `dist` 建议使用后端认可的完整字符串，例如 `Debian13:riscv64`。
 
 ## 环境变量
 

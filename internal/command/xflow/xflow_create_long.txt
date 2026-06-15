@@ -4,6 +4,18 @@
 请求体通过 --file 传入，JSON 字段与 SLAM API CreateXflowReq 对齐。
 --action-user 会写入 X-Action-User header，主要用于服务账号代真实用户发起的场景。
 
+publish 有两种常见场景：
+  1. 仅上源不发起变更：不传 changeOrder，填写 reasonNoChange。
+  2. 上源并发起变更：传 changeOrder，reasonNoChange 置空。
+
+后端行为说明：
+  - publish + changeOrder：后端会基于 changeOrder 创建变更。
+  - publish + 无 changeOrder：评审消息会展示“仅上源未变更，理由：reasonNoChange”。
+  - src 包 publish：branch 必填。
+  - bin 包 publish：files 必填。
+  - dkms 包 publish：smokeTestParams 必填。
+  - dist 必须使用后端认可的发行版字符串，例如 Debian13:riscv64。
+
 create-xflow.json 必须包含：
   type     工单类型：publish、register、sync
   package  软件包名
@@ -63,9 +75,9 @@ VersionNote
 SmokeTestParams
   冒烟测试参数。DKMS 包发布时通常必填。
 ChangeOrder
-  变更单数据。如果提供，会用于创建或关联变更单。
+  变更单数据。如果提供，会用于创建变更；这是“上源+变更”场景。
 ReasonNoChange
-  不走变更单或无变更单的原因。ChangeOrder 为空时需要提供。
+  仅上源不发起变更的原因。ChangeOrder 为空时应填写。
 Dist
   本次发布覆盖的发行版 / 目标列表。
 Region
@@ -82,4 +94,3 @@ VersionID
   要同步的版本 ID。
 Region
   要同步到的区域列表。
-```
