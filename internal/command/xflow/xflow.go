@@ -16,10 +16,10 @@ import (
 
 const defaultPageSize int64 = 20
 
-//go:embed xflow_create_long.txt
+//go:embed xflow_create_long.md
 var xflowCreateLong string
 
-//go:embed xflow_create_example.txt
+//go:embed xflow_create_example.md
 var xflowCreateExample string
 
 func NewXflowCommand() *cobra.Command {

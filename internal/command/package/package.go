@@ -16,10 +16,10 @@ import (
 
 const defaultPageSize int64 = 20
 
-//go:embed package_update_long.txt
+//go:embed package_update_long.md
 var packageUpdateLong string
 
-//go:embed package_update_example.txt
+//go:embed package_update_example.md
 var packageUpdateExample string
 
 func NewPackageCommand() *cobra.Command {
