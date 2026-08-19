@@ -54,6 +54,39 @@ func TestUpdatePackageUsesPutPackageName(t *testing.T) {
 	}
 }
 
+func TestGetPackageUsesDetailQuery(t *testing.T) {
+	var gotMethod, gotPath, gotName string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.EscapedPath()
+		gotName = r.URL.Query().Get("name")
+		_ = json.NewEncoder(w).Encode(dto.ApiResponse[dto.PackageDetail]{
+			Code: 0,
+			Data: dto.PackageDetail{Name: "demo/pkg"},
+		})
+	}))
+	defer server.Close()
+
+	client := &Client{baseURL: server.URL, http: newHTTPClientForTest()}
+	resp, err := client.GetPackage(context.Background(), "demo/pkg")
+	if err != nil {
+		t.Fatalf("GetPackage returned error: %v", err)
+	}
+
+	if gotMethod != http.MethodGet {
+		t.Fatalf("method = %q, want %q", gotMethod, http.MethodGet)
+	}
+	if gotPath != "/package/detail" {
+		t.Fatalf("path = %q, want /package/detail", gotPath)
+	}
+	if gotName != "demo/pkg" {
+		t.Fatalf("name query = %q, want %q", gotName, "demo/pkg")
+	}
+	if resp == nil || resp.Name != "demo/pkg" {
+		t.Fatalf("response = %+v, want package demo/pkg", resp)
+	}
+}
+
 func TestCreateXflowUsesPostAndActionUserHeader(t *testing.T) {
 	var gotMethod, gotPath, gotActionUser string
 	var gotBody dto.CreateXflowReq

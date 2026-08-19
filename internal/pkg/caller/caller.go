@@ -54,7 +54,10 @@ func (c *Client) GetPackage(ctx context.Context, name string) (*dto.PackageDetai
 		return nil, fmt.Errorf("package name is required")
 	}
 
-	resp, err := c.http.R().SetContext(ctx).Get(c.urlFor("package", url.PathEscape(name)))
+	resp, err := c.http.R().
+		SetContext(ctx).
+		SetQueryParam("name", name).
+		Get(c.urlFor("package", "detail"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to call get package API: %w", err)
 	}
